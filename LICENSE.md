@@ -1,4 +1,4 @@
-COZY LIBRARY V3 — COPYRIGHT AND USAGE NOTICE 
+COZY LIBRARY V3 — COPYRIGHT AND USAGE NOTICE
 
 Copyright (c) 2026 Cozy Library V3 contributors.
 All rights reserved unless a separate written license states otherwise.
