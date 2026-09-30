@@ -1,0 +1,988 @@
+--!strict
+-- CozyLibrary V3.0.1 complete client UI source
+-- Optimized single-file build; no padding or generated junk lines.
+
+local function buildSplash()
+--!strict
+-- Cozy V3 - Full-screen branded loading splash
+-- Roblox Luau ModuleScript
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+
+local Splash = {}
+Splash.__index = Splash
+
+
+local DEFAULTS: any = {
+	Title = "Cozy V3",
+	Subtitle = "Preparing your experience",
+	Accent = Color3.fromRGB(177, 119, 255),
+	Background = Color3.fromRGB(12, 10, 20),
+	Duration = 0.85,
+	LogoImage = "",
+}
+
+local function mergeOptions(options: any?): any
+	local result = {}
+	for key, value in pairs(DEFAULTS) do
+		(result :: any)[key] = value
+	end
+	if options then
+		for key, value in pairs(options) do
+			(result :: any)[key] = value
+		end
+	end
+	return result
+end
+
+local function create(className: string, properties: {[string]: any}, parent: Instance?): Instance
+	local object = Instance.new(className)
+	for property, value in pairs(properties) do
+		(object :: any)[property] = value
+	end
+	if parent then
+		object.Parent = parent
+	end
+	return object
+end
+
+local function tween(instance: Instance, info: TweenInfo, properties: {[string]: any})
+	local animation = TweenService:Create(instance, info, properties)
+	animation:Play()
+	return animation
+end
+
+local function addCorner(parent: Instance, radius: number)
+	create("UICorner", {CornerRadius = UDim.new(0, radius)}, parent)
+end
+
+local function addStroke(parent: Instance, color: Color3, transparency: number, thickness: number)
+	create("UIStroke", {
+		Color = color,
+		Transparency = transparency,
+		Thickness = thickness,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+	}, parent)
+end
+
+function Splash.new(options: any?)
+	local self = setmetatable({}, Splash)
+	self.Options = mergeOptions(options)
+	self.Destroyed = false
+	self.Gui = nil
+	self.StatusLabel = nil
+	self.ProgressFill = nil
+	self.ProgressValue = 0
+	return self
+end
+
+function Splash:_makeSteam(parent: Instance, x: number, delay: number)
+	local steam = create("Frame", {
+		Name = "Steam",
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0, x, 0, 70),
+		Size = UDim2.fromOffset(4, 30),
+		BackgroundColor3 = Color3.fromRGB(238, 222, 255),
+		BackgroundTransparency = 0.25,
+		Rotation = -8,
+	}, parent)
+	addCorner(steam, 4)
+
+	task.delay(delay, function()
+		if self.Destroyed or not steam.Parent then return end
+		while not self.Destroyed and steam.Parent do
+			steam.Position = UDim2.new(0, x, 0, 70)
+			steam.Size = UDim2.fromOffset(4, 26)
+			steam.BackgroundTransparency = 0.25
+			steam.Rotation = -8
+			tween(steam, TweenInfo.new(1.35, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+				Position = UDim2.new(0, x + 7, 0, 8),
+				Size = UDim2.fromOffset(3, 38),
+				BackgroundTransparency = 1,
+				Rotation = 12,
+			})
+			task.wait(1.1)
+		end
+	end)
+end
+
+function Splash:_buildLogo(parent: Instance)
+	local accent = self.Options.Accent :: Color3
+	local logo = create("Frame", {
+		Name = "CozyLogo",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.36),
+		Size = UDim2.fromOffset(220, 150),
+		BackgroundTransparency = 1,
+	}, parent)
+
+	local glow = create("Frame", {
+		Name = "Glow",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.56),
+		Size = UDim2.fromOffset(150, 85),
+		BackgroundColor3 = accent,
+		BackgroundTransparency = 0.82,
+	}, logo)
+	addCorner(glow, 42)
+
+	local steamLayer = create("Frame", {
+		Name = "SteamLayer",
+		Position = UDim2.fromOffset(65, 5),
+		Size = UDim2.fromOffset(90, 75),
+		BackgroundTransparency = 1,
+	}, logo)
+	self:_makeSteam(steamLayer, 20, 0)
+	self:_makeSteam(steamLayer, 45, 0.35)
+	self:_makeSteam(steamLayer, 68, 0.7)
+
+	local cup = create("Frame", {
+		Name = "Cup",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, -8, 0, 58),
+		Size = UDim2.fromOffset(112, 62),
+		BackgroundColor3 = accent,
+	}, logo)
+	addCorner(cup, 16)
+	addStroke(cup, Color3.fromRGB(230, 205, 255), 0.45, 2)
+
+	local coffee = create("Frame", {
+		Name = "Coffee",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 5),
+		Size = UDim2.fromOffset(86, 13),
+		BackgroundColor3 = Color3.fromRGB(62, 35, 76),
+	}, cup)
+	addCorner(coffee, 8)
+
+	local handle = create("Frame", {
+		Name = "Handle",
+		Position = UDim2.new(1, -4, 0, 14),
+		Size = UDim2.fromOffset(30, 30),
+		BackgroundColor3 = accent,
+	}, cup)
+	addCorner(handle, 15)
+	local handleHole = create("Frame", {
+		Name = "HandleHole",
+		Position = UDim2.fromOffset(7, 7),
+		Size = UDim2.fromOffset(16, 16),
+		BackgroundColor3 = self.Options.Background :: Color3,
+	}, handle)
+	addCorner(handleHole, 9)
+
+	local wordmark = create("TextLabel", {
+		Name = "Wordmark",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 78),
+		Size = UDim2.fromOffset(100, 30),
+		BackgroundTransparency = 1,
+		Text = "Cozy",
+		TextColor3 = Color3.fromRGB(255, 247, 255),
+		TextSize = 22,
+		Font = Enum.Font.GothamBold,
+		TextXAlignment = Enum.TextXAlignment.Center,
+	}, logo)
+
+	return logo
+end
+
+function Splash:_setProgress(value: number, status: string)
+	self.ProgressValue = math.clamp(value, 0, 1)
+	if self.ProgressFill then
+		tween(self.ProgressFill, TweenInfo.new(0.28, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+			Size = UDim2.new(self.ProgressValue, 0, 1, 0),
+		})
+	end
+	if self.StatusLabel then
+		self.StatusLabel.Text = status
+	end
+end
+
+function Splash:Build()
+	local player = Players.LocalPlayer
+	assert(player, "Cozy V3 Splash must run on the client")
+
+	local playerGui = player:WaitForChild("PlayerGui")
+	local gui = create("ScreenGui", {
+		Name = "CozyV3Splash",
+		IgnoreGuiInset = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 10000,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+	}, playerGui)
+	self.Gui = gui
+
+	local background = create("Frame", {
+		Name = "Background",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = self.Options.Background :: Color3,
+		BackgroundTransparency = 0,
+	}, gui)
+
+	local gradient = create("UIGradient", {
+		Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, self.Options.Background :: Color3),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 16, 39)),
+		}),
+		Rotation = 125,
+	}, background)
+
+	local vignette = create("Frame", {
+		Name = "Vignette",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+		BackgroundTransparency = 0.82,
+	}, background)
+
+	local content = create("Frame", {
+		Name = "Content",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(430, 320),
+		BackgroundTransparency = 1,
+	}, background)
+
+	local logo = self:_buildLogo(content)
+	local title = create("TextLabel", {
+		Name = "Title",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.fromScale(0.5, 0.58),
+		Size = UDim2.fromOffset(380, 40),
+		BackgroundTransparency = 1,
+		Text = self.Options.Title :: string,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextSize = 28,
+		Font = Enum.Font.GothamBold,
+		TextXAlignment = Enum.TextXAlignment.Center,
+	}, content)
+
+	local subtitle = create("TextLabel", {
+		Name = "Subtitle",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.fromScale(0.5, 0.705),
+		Size = UDim2.fromOffset(380, 25),
+		BackgroundTransparency = 1,
+		Text = self.Options.Subtitle :: string,
+		TextColor3 = Color3.fromRGB(190, 180, 204),
+		TextSize = 14,
+		Font = Enum.Font.Gotham,
+		TextXAlignment = Enum.TextXAlignment.Center,
+	}, content)
+
+	local track = create("Frame", {
+		Name = "ProgressTrack",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.fromScale(0.5, 0.82),
+		Size = UDim2.fromOffset(330, 7),
+		BackgroundColor3 = Color3.fromRGB(55, 43, 66),
+	}, content)
+	addCorner(track, 4)
+
+	self.ProgressFill = create("Frame", {
+		Name = "ProgressFill",
+		Size = UDim2.new(0, 0, 1, 0),
+		BackgroundColor3 = self.Options.Accent :: Color3,
+	}, track)
+	addCorner(self.ProgressFill, 4)
+
+	self.StatusLabel = create("TextLabel", {
+		Name = "Status",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.fromScale(0.5, 0.865),
+		Size = UDim2.fromOffset(380, 22),
+		BackgroundTransparency = 1,
+		Text = "Starting...",
+		TextColor3 = Color3.fromRGB(174, 162, 188),
+		TextSize = 12,
+		Font = Enum.Font.Gotham,
+		TextXAlignment = Enum.TextXAlignment.Center,
+	}, content)
+
+	-- Entrance animation: fade in the full-screen layer and gently scale the logo.
+	background.BackgroundTransparency = 1
+	logo.Size = UDim2.fromOffset(190, 130)
+	tween(background, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0})
+	tween(logo, TweenInfo.new(0.65, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.fromOffset(220, 150)})
+
+	return self
+end
+
+function Splash:Run(stages: {{Name: string, Duration: number?}}?, onComplete: (() -> ())?)
+	if not self.Gui then self:Build() end
+	local selectedStages = stages or {
+		{Name = "Creating interface...", Duration = 0.35},
+		{Name = "Loading theme engine...", Duration = 0.3},
+		{Name = "Registering components...", Duration = 0.35},
+		{Name = "Preparing configuration...", Duration = 0.3},
+		{Name = "Almost ready...", Duration = 0.25},
+	}
+
+	local total = #selectedStages
+	for index, stage in ipairs(selectedStages) do
+		if self.Destroyed then return end
+		self:_setProgress((index - 1) / total, stage.Name)
+		task.wait(stage.Duration or 0.25)
+		self:_setProgress(index / total, stage.Name)
+	end
+
+	self:_setProgress(1, "Ready")
+	task.wait(0.22)
+	if onComplete then onComplete() end
+end
+
+function Splash:Close()
+	if self.Destroyed then return end
+	self.Destroyed = true
+	if self.Gui then
+		local background = self.Gui:FindFirstChild("Background")
+		if background then
+			tween(background, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				BackgroundTransparency = 1,
+			})
+			task.delay(0.38, function()
+				if self.Gui then self.Gui:Destroy() end
+			end)
+		else
+			self.Gui:Destroy()
+		end
+	end
+end
+
+function Splash:Destroy()
+	self:Close()
+end
+
+	return Splash
+end
+
+local function buildLibrary()
+--!strict
+-- Cozy Library V3 - safe client-side UI core
+-- This module intentionally does not execute arbitrary source or bypass Roblox systems.
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local Library = {}
+Library.__index = Library
+
+
+local PURPLE = Color3.fromRGB(177, 119, 255)
+
+local function create(className: string, properties: {[string]: any}, parent: Instance?): Instance
+	local object = Instance.new(className)
+	for property, value in pairs(properties) do
+		(object :: any)[property] = value
+	end
+	if parent then object.Parent = parent end
+	return object
+end
+
+local function tween(instance: Instance, info: TweenInfo, properties: {[string]: any})
+	local animation = TweenService:Create(instance, info, properties)
+	animation:Play()
+	return animation
+end
+
+local function round(parent: Instance, radius: number)
+	create("UICorner", {CornerRadius = UDim.new(0, radius)}, parent)
+end
+
+local function formatGameName(name: string): string
+	if name == "" then return "this experience" end
+	return name
+end
+
+function Library.new(options: any?)
+	local settings = options or {}
+	local self = setmetatable({}, Library)
+	self.Name = settings.Name or "Cozy UI"
+	self.GameId = settings.GameId
+	self.GameName = settings.GameName or "this experience"
+	self.Accent = settings.Accent or PURPLE
+	self.Transparency = math.clamp(tonumber(settings.DefaultTransparency) or 0, 0, 1)
+	self.BackgroundMode = settings.Background or "Default"
+	self.GraphicsMode = settings.GraphicsMode or "Medium"
+	self.SoundId = settings.AddSoundEffect
+	self.ButtonSounds = {}
+	self.Tabs = {}
+	self.Tools = {}
+	self.Notifications = {}
+	self.Gui = nil
+	self.Content = nil
+	self.TabList = nil
+	self.PageHolder = nil
+	self.ActiveTab = nil
+	self.Root = nil
+	self.BackgroundLayer = nil
+	self.CoordLabel = nil
+	self.ScaleObject = nil
+	self.IsShrunk = false
+	self.SideRailExpanded = true
+	self.SideRailAnimation = true
+	self.IsTouchDevice = UserInputService.TouchEnabled
+	self.AntiTamper = settings.AntiTamper == true
+	self.TamperCallback = settings.TamperCallback
+	self.ExpectedParent = nil
+	self.Destroyed = false
+	self:_validateGame()
+	self:_build(settings.Parent)
+	if self.AntiTamper then self:_startTamperMonitor() end
+	return self
+end
+
+function Library:_validateGame()
+	if self.GameId and game.GameId ~= self.GameId then
+		self._WrongGame = true
+	end
+end
+
+function Library:_build(parent: Instance?)
+	local player = Players.LocalPlayer
+	assert(player, "Cozy Library must be created on the client")
+	local playerGui = parent or player:WaitForChild("PlayerGui")
+	self.ExpectedParent = playerGui
+
+	local gui = create("ScreenGui", {
+		Name = "CozyV3_" .. self.Name:gsub("%W", ""),
+		IgnoreGuiInset = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 900,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+	}, playerGui)
+	self.Gui = gui
+
+	local backgroundLayer = create("Frame", {Name = "BackgroundLayer", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(12, 10, 20), BackgroundTransparency = 0}, gui)
+	self.BackgroundLayer = backgroundLayer
+	local root = create("Frame", {
+		Name = "Root",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(760, 470),
+		BackgroundColor3 = Color3.fromRGB(18, 14, 27),
+	}, gui)
+	self.Root = root
+	round(root, 14)
+	create("UIStroke", {Color = self.Accent, Transparency = 0.72, Thickness = 1.5}, root)
+
+	local top = create("Frame", {
+		Name = "TopBar",
+		Size = UDim2.new(1, 0, 0, 60),
+		BackgroundColor3 = Color3.fromRGB(25, 19, 38),
+	}, root)
+	round(top, 14)
+	self:_setupDrag(top)
+
+	create("TextLabel", {
+		Name = "Title",
+		Position = UDim2.fromOffset(22, 10),
+		Size = UDim2.new(1, -44, 0, 26),
+		BackgroundTransparency = 1,
+		Text = self.Name,
+		Font = Enum.Font.GothamBold,
+		TextSize = 20,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextXAlignment = Enum.TextXAlignment.Left,
+	}, top)
+
+	create("TextLabel", {
+		Name = "Credits",
+		Position = UDim2.fromOffset(22, 35),
+		Size = UDim2.new(1, -44, 0, 18),
+		BackgroundTransparency = 1,
+		Text = "Cozy Library V3",
+		Font = Enum.Font.Gotham,
+		TextSize = 11,
+		TextColor3 = self.Accent,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	}, top)
+	local minimize = create("TextButton", {Name = "Minimize", Position = UDim2.new(1, -76, 0, 14), Size = UDim2.fromOffset(28, 28), BackgroundTransparency = 1, Text = "−", Font = Enum.Font.GothamBold, TextSize = 22, TextColor3 = Color3.fromRGB(220, 210, 230)}, top)
+	local close = create("TextButton", {Name = "Close", Position = UDim2.new(1, -42, 0, 14), Size = UDim2.fromOffset(28, 28), BackgroundTransparency = 1, Text = "×", Font = Enum.Font.GothamBold, TextSize = 22, TextColor3 = Color3.fromRGB(240, 180, 210)}, top)
+	minimize.Activated:Connect(function() self:SetMinimized(not self.Minimized) end)
+	close.Activated:Connect(function() self:_confirmClose() end)
+
+	self.TabList = create("ScrollingFrame", {
+		Name = "TabList",
+		Position = UDim2.fromOffset(12, 72),
+		Size = UDim2.new(0, 170, 1, -84),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 2,
+		ScrollBarImageColor3 = self.Accent,
+		CanvasSize = UDim2.new(),
+	}, root)
+	create("UIListLayout", {Padding = UDim.new(0, 7), SortOrder = Enum.SortOrder.LayoutOrder}, self.TabList)
+
+	self.PageHolder = create("Frame", {
+		Name = "Pages",
+		Position = UDim2.fromOffset(195, 72),
+		Size = UDim2.new(1, -210, 1, -84),
+		BackgroundTransparency = 1,
+	}, root)
+	self.Content = root
+	self.ScaleObject = create("UIScale", {Scale = 1}, root)
+	self.Minimized = false
+	local camera = workspace.CurrentCamera
+	local function updateResponsiveScale()
+		if not camera or not self.ScaleObject then return end
+		local viewport = camera.ViewportSize
+		local compact = viewport.X < 700 or viewport.Y < 520
+		root.Size = compact and UDim2.fromOffset(360, 430) or UDim2.fromOffset(760, 470)
+		self.PageHolder.Position = compact and UDim2.fromOffset(72, 72) or UDim2.fromOffset(195, 72)
+		self.PageHolder.Size = compact and UDim2.new(1, -84, 1, -84) or UDim2.new(1, -210, 1, -84)
+	end
+	if camera then camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateResponsiveScale) end
+	updateResponsiveScale()
+
+	self:AddTab({Name = "Home", Icon = "⌂"})
+	self:AddTab({Name = "Chat", Icon = "◌"})
+	self:AddTab({Name = "Settings", Icon = "⚙", Bottom = true})
+	self:_setupSideRail()
+	self:_buildHomePanel()
+	self:_addBaseSettings()
+	self:SetBackground(self.BackgroundMode)
+	self:SelectTab("Home")
+
+	if self._WrongGame then
+		self:Notify("Game restriction", "This script is only used in " .. formatGameName(self.GameName), 5)
+	end
+end
+
+function Library:_startTamperMonitor()
+	-- Best-effort integrity check for accidental edits/removal in PlayerGui.
+	-- This is not a security boundary: a client can disable or modify client code.
+	if not self.Gui then return end
+	self.Gui:SetAttribute("CozyIntegrity", "CozyV3")
+	local expectedName = self.Gui.Name
+	task.spawn(function()
+		while self.Gui and not self.Destroyed do
+			local reason: string? = nil
+			if self.Gui.Parent ~= self.ExpectedParent then reason = "ScreenGui reparented" end
+			if self.Gui.Name ~= expectedName then reason = "ScreenGui name changed" end
+			if self.Gui:GetAttribute("CozyIntegrity") ~= "CozyV3" then reason = "integrity marker changed" end
+			if not self.Gui:FindFirstChild("Root") then reason = "Root UI removed" end
+			if not self.Gui:FindFirstChild("TabList", true) then reason = "Tab rail removed" end
+			if reason then
+				if self.TamperCallback then self.TamperCallback(reason) end
+				self.Gui:SetAttribute("CozyIntegrity", "CozyV3")
+				if self.Gui.Parent ~= self.ExpectedParent and self.ExpectedParent then self.Gui.Parent = self.ExpectedParent end
+				task.wait(1)
+			end
+			task.wait(1)
+		end
+	end)
+end
+
+function Library:_setupDrag(handle: GuiObject)
+	local dragging = false
+	local dragStart = Vector2.zero
+	local startPosition = UDim2.fromScale(0.5, 0.5)
+	handle.Active = true
+	handle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPosition = self.Root.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if not dragging or (input.UserInputType ~= Enum.UserInputType.MouseMovement and input.UserInputType ~= Enum.UserInputType.Touch) then return end
+		local delta = input.Position - dragStart
+		self.Root.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
+	end)
+end
+function Library:_setRailExpanded(expanded: boolean)
+	if self.IsTouchDevice then expanded = true end
+	self.SideRailExpanded = expanded
+	if not self.TabList then return end
+	local width = expanded and 170 or 48
+	local duration = self.SideRailAnimation and 0.22 or 0
+	tween(self.TabList, TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, width, 1, -84)})
+	for _, tab in pairs(self.Tabs) do tab.Button.Text = expanded and tab.FullText or tab.Icon end
+end
+function Library:SetSideRailAnimation(enabled: boolean)
+	self.SideRailAnimation = enabled
+	if self.IsTouchDevice then self:_setRailExpanded(true) else self:_setRailExpanded(not enabled) end
+end
+function Library:_setupSideRail()
+	if not self.TabList then return end
+	if self.IsTouchDevice then self:_setRailExpanded(true); return end
+	self.TabList.MouseEnter:Connect(function() self:_setRailExpanded(true) end)
+	self.TabList.MouseLeave:Connect(function() if self.SideRailAnimation then self:_setRailExpanded(false) end end)
+	self:_setRailExpanded(false)
+end
+
+function Library:_buildHomePanel()
+	local home = self.Tabs.Home
+	if not home then return end
+	create("TextLabel", {Name = "CozyDexBadge", Position = UDim2.fromOffset(0, 42), Size = UDim2.fromOffset(220, 26), BackgroundTransparency = 1, Text = "CozyDex  •  read-only", Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = self.Accent, TextXAlignment = Enum.TextXAlignment.Left}, home.Page)
+	local card = create("Frame", {Name = "PlayerInfo", Position = UDim2.fromOffset(0, 78), Size = UDim2.new(1, 0, 0, 112), BackgroundColor3 = Color3.fromRGB(29, 22, 42), BackgroundTransparency = 0.08}, home.Page)
+	round(card, 10)
+	local dexArrow = create("TextButton", {Name = "DexArrow", Position = UDim2.new(1, -42, 0, 10), Size = UDim2.fromOffset(30, 30), BackgroundTransparency = 1, Text = "⌄", Font = Enum.Font.GothamBold, TextSize = 22, TextColor3 = self.Accent}, card)
+	local dexDetails = create("Frame", {Name = "DexDetails", Position = UDim2.fromOffset(14, 116), Size = UDim2.new(1, -28, 0, 92), BackgroundTransparency = 1, Visible = false}, card)
+	create("TextLabel", {Position = UDim2.fromOffset(0, 0), Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, Text = "• Local UI profile", Font = Enum.Font.Gotham, TextSize = 12, TextColor3 = Color3.fromRGB(207, 195, 218), TextXAlignment = Enum.TextXAlignment.Left}, dexDetails)
+	create("TextLabel", {Position = UDim2.fromOffset(0, 25), Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, Text = "• Read-only coordinate display", Font = Enum.Font.Gotham, TextSize = 12, TextColor3 = Color3.fromRGB(207, 195, 218), TextXAlignment = Enum.TextXAlignment.Left}, dexDetails)
+	create("TextLabel", {Position = UDim2.fromOffset(0, 50), Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, Text = "• No source scanning or execution", Font = Enum.Font.Gotham, TextSize = 12, TextColor3 = Color3.fromRGB(207, 195, 218), TextXAlignment = Enum.TextXAlignment.Left}, dexDetails)
+	local dexOpen = false
+	dexArrow.Activated:Connect(function()
+		dexOpen = not dexOpen
+		dexDetails.Visible = dexOpen
+		dexArrow.Text = dexOpen and "⌃" or "⌄"
+		tween(card, TweenInfo.new(0.24, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, dexOpen and 218 or 112)})
+		self:_playButtonSound("DexArrow")
+	end)
+	local player = Players.LocalPlayer
+	local avatar = create("ImageLabel", {Name = "ProfileAvatar", Position = UDim2.fromOffset(14, 10), Size = UDim2.fromOffset(54, 54), BackgroundColor3 = Color3.fromRGB(43, 32, 58), BackgroundTransparency = 0, ScaleType = Enum.ScaleType.Crop}, card)
+	round(avatar, 27)
+	task.spawn(function()
+		local ok, image = pcall(function()
+			return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size100x100)
+		end)
+		if ok and avatar.Parent then avatar.Image = image end
+	end)
+	create("TextLabel", {Position = UDim2.fromOffset(82, 12), Size = UDim2.new(1, -28, 0, 22), BackgroundTransparency = 1, Text = "Player: " .. player.Name, Font = Enum.Font.GothamBold, TextSize = 14, TextColor3 = Color3.fromRGB(245, 240, 250), TextXAlignment = Enum.TextXAlignment.Left}, card)
+	self.CoordLabel = create("TextLabel", {Position = UDim2.fromOffset(82, 42), Size = UDim2.new(1, -28, 0, 22), BackgroundTransparency = 1, Text = "CordPos: loading...", Font = Enum.Font.Code, TextSize = 13, TextColor3 = self.Accent, TextXAlignment = Enum.TextXAlignment.Left}, card)
+	create("TextLabel", {Position = UDim2.fromOffset(14, 70), Size = UDim2.new(1, -28, 0, 24), BackgroundTransparency = 1, Text = "CozyDex lists UI-safe information only.", Font = Enum.Font.Gotham, TextSize = 11, TextColor3 = Color3.fromRGB(170, 160, 184), TextXAlignment = Enum.TextXAlignment.Left}, card)
+	task.spawn(function()
+		while self.Gui and self.Gui.Parent do
+			local character = player.Character
+			local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+			if self.CoordLabel and rootPart and rootPart:IsA("BasePart") then
+				local position = rootPart.Position
+				self.CoordLabel.Text = string.format("CordPos: X %.1f  Y %.1f  Z %.1f", position.X, position.Y, position.Z)
+			end
+			task.wait(0.2)
+		end
+	end)
+end
+
+function Library:_addBaseSettings()
+	local baseSettings = {
+		{Name = "Reduce animations", Default = false}, {Name = "Compact layout", Default = false},
+		{Name = "Large text", Default = false}, {Name = "Show notifications", Default = true},
+		{Name = "Purple accent", Default = true}, {Name = "Remember tab", Default = true},
+		{Name = "Auto-open Home", Default = true}, {Name = "Show Cozy credits", Default = true},
+		{Name = "Chat sound", Default = true}, {Name = "Responsive scaling", Default = true},
+	}
+	for _, setting in ipairs(baseSettings) do
+		self:AddSettings({Name = setting.Name, Type = "Toggle", Default = setting.Default, Callback = function(value)
+			if setting.Name == "Compact layout" then self:SetShrunk(value) end
+		end})
+	end
+	self:AddSettings({Name = "UI colour", Type = "Action", Default = "Purple", Callback = function()
+		self:SetAccent(self.Accent == PURPLE and Color3.fromRGB(105, 190, 255) or PURPLE)
+	end})
+	self:AddSettings({Name = "UI transparency", Type = "Action", Default = tostring(self.Transparency), Callback = function()
+		self:SetTransparency(self.Transparency >= 0.15 and 0 or 0.15)
+	end})
+	self:AddSettings({Name = "Animated side tabs", Type = "Toggle", Default = true, Callback = function(value)
+		self:SetSideRailAnimation(value)
+	end})
+	self:AddSettings({Name = "Low graphics", Type = "Action", Default = "Off", Callback = function() self:SetGraphicsMode("Low") end})
+	self:AddSettings({Name = "Medium graphics", Type = "Action", Default = "On", Callback = function() self:SetGraphicsMode("Medium") end})
+	self:AddSettings({Name = "High graphics", Type = "Action", Default = "Off", Callback = function() self:SetGraphicsMode("High") end})
+end
+function Library:AddTab(tab: {Name: string, Icon: string?, Bottom: boolean?, Disabled: boolean?, Description: string?})
+	assert(tab.Name and tab.Name ~= "", "Cozy:AddTab requires a Name")
+	if self.Tabs[tab.Name] then return self.Tabs[tab.Name] end
+
+	local page = create("Frame", {
+		Name = tab.Name:gsub("%W", ""),
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Visible = false,
+	}, self.PageHolder)
+	create("TextLabel", {
+		Name = "Heading",
+		Size = UDim2.new(1, 0, 0, 32),
+		BackgroundTransparency = 1,
+		Text = tab.Name,
+		Font = Enum.Font.GothamBold,
+		TextSize = 24,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextXAlignment = Enum.TextXAlignment.Left,
+	}, page)
+	if tab.Description then
+		create("TextLabel", {
+			Position = UDim2.fromOffset(0, 38),
+			Size = UDim2.new(1, 0, 0, 28),
+			BackgroundTransparency = 1,
+			Text = tab.Description,
+			Font = Enum.Font.Gotham,
+			TextSize = 13,
+			TextColor3 = Color3.fromRGB(170, 160, 184),
+			TextXAlignment = Enum.TextXAlignment.Left,
+		}, page)
+	end
+
+	local fullText = (tab.Icon or "") .. "  " .. tab.Name
+	local button = create("TextButton", {
+		Name = tab.Name .. "Button",
+		Size = UDim2.new(1, -6, 0, 36),
+		BackgroundColor3 = Color3.fromRGB(29, 22, 42),
+		BackgroundTransparency = tab.Disabled and 0.35 or 0,
+		Text = fullText,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 13,
+		TextColor3 = tab.Disabled and Color3.fromRGB(125, 116, 136) or Color3.fromRGB(224, 216, 232),
+		AutoButtonColor = not tab.Disabled,
+		LayoutOrder = tab.Bottom and 1000 or #self.Tabs,
+	}, self.TabList)
+	round(button, 8)
+
+	if not tab.Disabled then
+		button.Activated:Connect(function()
+			self:_playButtonSound(tab.Name)
+			self:SelectTab(tab.Name)
+		end)
+	end
+
+	local record = {Name = tab.Name, Page = page, Button = button, Disabled = tab.Disabled, FullText = fullText, Icon = tab.Icon or ""}
+	self.Tabs[tab.Name] = record
+	return record
+end
+
+function Library:SelectTab(name: string)
+	local selected = self.Tabs[name]
+	if not selected or selected.Disabled then return end
+	for _, tab in pairs(self.Tabs) do
+		tab.Page.Visible = false
+		tab.Button.BackgroundColor3 = Color3.fromRGB(29, 22, 42)
+	end
+	selected.Page.Visible = true
+	selected.Button.BackgroundColor3 = self.Accent
+	self.ActiveTab = name
+end
+
+function Library:AddSettings(setting: {Name: string, Type: string?, Default: any?, Callback: ((any) -> ())?})
+	local tab = self.Tabs.Settings
+	if not tab then return end
+	local y = 48 + (#tab.Page:GetChildren() - 2) * 48
+	local state = setting.Default
+	local row = create("TextButton", {
+		Name = setting.Name:gsub("%W", ""),
+		Position = UDim2.fromOffset(0, y),
+		Size = UDim2.new(1, 0, 0, 40),
+		BackgroundColor3 = Color3.fromRGB(29, 22, 42),
+		Text = setting.Name .. "  [" .. tostring(setting.Default) .. "]",
+		Font = Enum.Font.Gotham,
+		TextSize = 13,
+		TextColor3 = Color3.fromRGB(235, 230, 240),
+		TextXAlignment = Enum.TextXAlignment.Left,
+	}, tab.Page)
+	round(row, 8)
+	row.Activated:Connect(function()
+		self:_playButtonSound(setting.Name)
+		if setting.Type == "Toggle" then state = not state end
+		row.Text = setting.Name .. "  [" .. tostring(state) .. "]"
+		if setting.Callback then setting.Callback(state) end
+	end)
+end
+
+function Library:SetMinimized(minimized: boolean)
+	self.Minimized = minimized
+	if not self.Root then return end
+	local target = minimized and UDim2.fromOffset(250, 62) or (self.IsTouchDevice and UDim2.fromOffset(360, 430) or UDim2.fromOffset(760, 470))
+	tween(self.Root, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = target})
+	if self.TabList then self.TabList.Visible = not minimized end
+	if self.PageHolder then self.PageHolder.Visible = not minimized end
+	local title = self.Root.TopBar:FindFirstChild("Title")
+	if title and title:IsA("TextLabel") then title.Text = minimized and (self.Name .. "  •  minimized") or self.Name end
+end
+function Library:_confirmClose()
+	if not self.Gui or self.Gui:FindFirstChild("CloseConfirm") then return end
+	local modal = create("Frame", {Name = "CloseConfirm", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(330, 150), BackgroundColor3 = Color3.fromRGB(24, 18, 35), ZIndex = 80}, self.Gui)
+	round(modal, 12)
+	create("TextLabel", {Position = UDim2.fromOffset(18, 18), Size = UDim2.new(1, -36, 0, 26), BackgroundTransparency = 1, Text = "Close Cozy UI?", Font = Enum.Font.GothamBold, TextSize = 18, TextColor3 = Color3.fromRGB(255, 250, 255), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 81}, modal)
+	create("TextLabel", {Position = UDim2.fromOffset(18, 50), Size = UDim2.new(1, -36, 0, 34), BackgroundTransparency = 1, Text = "This will remove the interface from your device.", Font = Enum.Font.Gotham, TextSize = 12, TextColor3 = Color3.fromRGB(185, 174, 198), TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 81}, modal)
+	local no = create("TextButton", {Position = UDim2.fromOffset(170, 103), Size = UDim2.fromOffset(65, 30), BackgroundColor3 = Color3.fromRGB(52, 39, 68), Text = "No", Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = Color3.fromRGB(240, 235, 245), ZIndex = 81}, modal)
+	local yes = create("TextButton", {Position = UDim2.fromOffset(242, 103), Size = UDim2.fromOffset(70, 30), BackgroundColor3 = self.Accent, Text = "Yes", Font = Enum.Font.GothamBold, TextSize = 12, TextColor3 = Color3.fromRGB(30, 20, 38), ZIndex = 81}, modal)
+	round(no, 7); round(yes, 7)
+	no.Activated:Connect(function() modal:Destroy() end)
+	yes.Activated:Connect(function() self:Destroy() end)
+end
+
+function Library:AddSoundEffect(soundId: string)
+	self.SoundId = soundId
+end
+function Library:PlayForButton(buttonName: string, soundId: string)
+	self.ButtonSounds[buttonName] = soundId
+end
+function Library:PlayForAllButtons(soundId: string)
+	self.SoundId = soundId
+end
+function Library:_playButtonSound(buttonName: string)
+	local soundId = self.ButtonSounds[buttonName] or self.SoundId
+	if not soundId or soundId == "" or not self.Gui then return end
+	local sound = Instance.new("Sound")
+	sound.Name = "CozyButtonSound"
+	sound.SoundId = soundId
+	sound.Volume = 0.28
+	sound.Parent = self.Gui
+	sound.Ended:Connect(function() sound:Destroy() end)
+	sound:Play()
+end
+function Library:SetGraphicsMode(mode: string)
+	mode = string.upper(mode:sub(1, 1)) .. string.lower(mode:sub(2))
+	if mode ~= "Low" and mode ~= "Medium" and mode ~= "High" then mode = "Medium" end
+	self.GraphicsMode = mode
+	if mode == "Low" then
+		self:SetSideRailAnimation(false)
+	elseif mode == "High" then
+		self:SetSideRailAnimation(true)
+	end
+	if self.Root then
+		local stroke = self.Root:FindFirstChildOfClass("UIStroke")
+		if stroke then stroke.Transparency = mode == "Low" and 0.88 or (mode == "High" and 0.55 or 0.72) end
+	end
+end
+
+function Library:SetAccent(color: Color3)
+	self.Accent = color
+	if self.Root then
+		local stroke = self.Root:FindFirstChildOfClass("UIStroke")
+		if stroke then stroke.Color = color end
+	end
+end
+
+function Library:SetTransparency(value: number)
+	self.Transparency = math.clamp(value, 0, 1)
+	if self.Root then self.Root.BackgroundTransparency = self.Transparency end
+end
+
+function Library:SetBackground(mode: string)
+	self.BackgroundMode = mode
+	if not self.BackgroundLayer then return end
+	local color = Color3.fromRGB(12, 10, 20)
+	if mode == "Hacker" then
+		color = Color3.fromRGB(3, 15, 10)
+	elseif mode == "Dev" then
+		color = Color3.fromRGB(24, 31, 49)
+	elseif mode == "GameID" then
+		local id = tonumber(tostring(game.GameId):sub(-6)) or 0
+		color = Color3.fromHSV((id % 360) / 360, 0.45, 0.3)
+	end
+	self.BackgroundLayer.BackgroundColor3 = color
+end
+
+function Library:SetCustomBackgroundAsset(assetId: string)
+	if not self.BackgroundLayer then return end
+	local image = self.BackgroundLayer:FindFirstChild("CustomBackground")
+	if not image then
+		image = create("ImageLabel", {Name = "CustomBackground", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ImageTransparency = 0.35, ScaleType = Enum.ScaleType.Crop}, self.BackgroundLayer)
+	end
+	if image:IsA("ImageLabel") then image.Image = assetId end
+end
+
+function Library:SetShrunk(shrunk: boolean?)
+	self.IsShrunk = if shrunk == nil then not self.IsShrunk else shrunk
+	if not self.ScaleObject or not self.Content then return end
+	local target = self.IsShrunk and 0.72 or 1
+	tween(self.ScaleObject, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Scale = target})
+	self:Notify("Cozy UI", self.IsShrunk and "UI shrunk into profile mode" or "UI restored", 2)
+end
+
+function Library:Shrink() self:SetShrunk(true) end
+function Library:Expand() self:SetShrunk(false) end
+
+function Library:AddScriptStartPlay(buttonName: string, animationName: string, onLoaded: (() -> ())?)
+	self:AddTool({Name = buttonName, Description = "Play " .. animationName, Callback = function()
+		self:PlayLoadingOverlay(animationName, onLoaded)
+	end})
+end
+
+function Library:PlayLoadingOverlay(animationName: string, onLoaded: (() -> ())?)
+	if not self.Gui then return end
+	local overlay = create("Frame", {Name = "CozyAnimationOverlay", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(12, 10, 20), BackgroundTransparency = 0.08, ZIndex = 50}, self.Gui)
+	create("TextLabel", {AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.45), Size = UDim2.fromOffset(420, 42), BackgroundTransparency = 1, Text = animationName .. "...", Font = Enum.Font.GothamBold, TextSize = 24, TextColor3 = self.Accent, ZIndex = 51}, overlay)
+	local bar = create("Frame", {AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.fromScale(0.5, 0.55), Size = UDim2.fromOffset(300, 6), BackgroundColor3 = Color3.fromRGB(58, 43, 74), ZIndex = 51}, overlay)
+	round(bar, 4)
+	local fill = create("Frame", {Size = UDim2.new(0, 0, 1, 0), BackgroundColor3 = self.Accent, ZIndex = 52}, bar)
+	round(fill, 4)
+	tween(fill, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.fromScale(1, 1)})
+	task.delay(0.88, function()
+		if onLoaded then onLoaded() end
+		if overlay.Parent then
+			tween(overlay, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1})
+			task.wait(0.27)
+			overlay:Destroy()
+		end
+	end)
+end
+
+function Library:AddTool(tool: {Name: string, Description: string?, Callback: () -> ()})
+	-- Safe alternative to an executor: only explicitly registered callbacks can run.
+	local tab = self.Tabs.Tools
+	if not tab then return end
+	local y = 48 + (#self.Tools * 58)
+	local button = create("TextButton", {
+		Name = tool.Name:gsub("%W", ""),
+		Position = UDim2.fromOffset(0, y),
+		Size = UDim2.new(1, 0, 0, 48),
+		BackgroundColor3 = Color3.fromRGB(29, 22, 42),
+		Text = tool.Name .. (tool.Description and "\n" .. tool.Description or ""),
+		Font = Enum.Font.GothamMedium,
+		TextSize = 13,
+		TextColor3 = Color3.fromRGB(235, 230, 240),
+	}, tab.Page)
+	round(button, 8)
+	button.Activated:Connect(tool.Callback)
+	table.insert(self.Tools, tool)
+end
+
+function Library:Notify(title: string, message: string, duration: number?)
+	local gui = self.Gui
+	if not gui then return end
+	local card = create("Frame", {
+		Name = "Notification",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, 300, 0, 78 + (#self.Notifications * 70)),
+		Size = UDim2.fromOffset(285, 60),
+		BackgroundColor3 = Color3.fromRGB(29, 22, 42),
+	}, gui)
+	round(card, 10)
+	create("UIStroke", {Color = self.Accent, Transparency = 0.35, Thickness = 1.2}, card)
+	create("TextLabel", {Position = UDim2.fromOffset(13, 8), Size = UDim2.new(1, -26, 0, 19), BackgroundTransparency = 1, Text = title, Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = self.Accent, TextXAlignment = Enum.TextXAlignment.Left}, card)
+	create("TextLabel", {Position = UDim2.fromOffset(13, 28), Size = UDim2.new(1, -26, 0, 24), BackgroundTransparency = 1, Text = message, Font = Enum.Font.Gotham, TextSize = 11, TextColor3 = Color3.fromRGB(226, 218, 232), TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left}, card)
+	table.insert(self.Notifications, card)
+	tween(card, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -18, 0, 78 + ((#self.Notifications - 1) * 70))})
+	task.delay(duration or 4, function()
+		if not card.Parent then return end
+		tween(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 300, 0, card.Position.Y.Offset)})
+		task.wait(0.28)
+		card:Destroy()
+	end)
+end
+
+function Library:Destroy()
+	self.Destroyed = true
+	if self.Gui then self.Gui:Destroy() end
+end
+
+	return Library
+end
+
+local Splash = buildSplash()
+local Library = buildLibrary()
+local loading = Splash.new({Title = "Cozy V3.0.1", Subtitle = "Preparing your profile interface", Accent = Color3.fromRGB(177, 119, 255), Background = Color3.fromRGB(12, 10, 20)})
+loading:Build()
+loading:Run({
+    {Name = "Reading local profile...", Duration = 0.35},
+    {Name = "Building responsive layout...", Duration = 0.35},
+    {Name = "Preparing CozyDex...", Duration = 0.35},
+    {Name = "Applying visual theme...", Duration = 0.35},
+    {Name = "Finishing interface...", Duration = 0.35},
+}, function()
+    loading:Close()
+    local Cozy = Library.new({Name = "Cozy UI", GameName = "this experience", Accent = Color3.fromRGB(177, 119, 255), DefaultTransparency = 0.15, Background = "Default", GraphicsMode = "High", AntiTamper = false})
+    Cozy:AddTab({Name = "Profile", Icon = "◉", Description = "Your local Roblox profile"})
+    Cozy:AddTab({Name = "Notifications", Icon = "!", Description = "Notification preview"})
+    Cozy:AddSettings({Name = "Demo toggle", Type = "Toggle", Default = true, Callback = function(value) Cozy:Notify("Demo toggle", tostring(value), 2) end})
+    Cozy:AddSoundEffect("rbxassetid://0") -- Replace with an approved sound asset ID.
+    Cozy:Notify("Cozy V3.0.1 ready", "Profile interface loaded locally.", 4)
+end)
